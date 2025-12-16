@@ -1,0 +1,4 @@
+.DS_Store
+.idea/
+application-local.properties
+target/
