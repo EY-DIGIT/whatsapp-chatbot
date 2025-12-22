@@ -7,6 +7,7 @@ import in.indore.whatsappbot.model.UserRequests;
 import in.indore.whatsappbot.model.ChatSession;
 import in.indore.whatsappbot.model.ChatState;
 import in.indore.whatsappbot.dto.OutgoingMessageDto;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -56,11 +57,24 @@ public class ChatFlowService {
         this.formDataService = formDataService;
     }
 
-    @Value("${url.login.form:http://localhost:8080/login/form/}")
+    @Value("${egov.form.host:https://urbanimcdev.eydemoapp.in/}")
+    private String formHost;
+
+    @Value("${egov.form.login.path:digit-ui/citizen/user/MobileLogin/}")
+    private String loginFormPath;
+
+    @Value("${egov.form.grievance.path:digit-ui/citizen/user/MobileLogin/}")
+    private String grievanceFormPath;
+
     private String loginFromUrl;
 
-    @Value("${url.grievance.form:http://localhost:8080/grievance/form/}")
     private String grievanceFormUrl;
+
+    @PostConstruct
+    public void init() {
+        loginFromUrl = formHost + loginFormPath;
+        grievanceFormUrl = formHost + grievanceFormPath;
+    }
 
     public void handleIncoming(String phone, String text, String rawJson) {
         // audit incoming

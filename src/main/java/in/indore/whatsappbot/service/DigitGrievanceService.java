@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import in.indore.whatsappbot.enums.RequestFor;
 import in.indore.whatsappbot.model.Grievance;
 import in.indore.whatsappbot.model.UserRequests;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,8 +32,11 @@ public class DigitGrievanceService {
     private final GrievanceService grievanceService;
     private final UserRequestService userRequestService;
 
-    @Value("${digit.token.url:https://urbanimcdev.eydemoapp.in/user/oauth/token}")
-    private String tokenUrl;
+    @Value("${egov.user.service.host:https://urbanimcdev.eydemoapp.in/}")
+    private String userHost;
+
+    @Value("${egov.user.token.path:user/oauth/token}")
+    private String tokenPath;
 
     @Value("${digit.token.basic:ZWdvdi11c2VyLWNsaWVudDo=}")
     private String tokenBasic;
@@ -55,11 +59,28 @@ public class DigitGrievanceService {
     @Value("${digit.tenantId:mp.indore}")
     private String tenantId;
 
-    @Value("${digit.search.url:https://urbanimcdev.eydemoapp.in/pgr-services/v2/request/_search}")
+    @Value("${egov.pgr.service.host:https://urbanimcdev.eydemoapp.in/}")
+    private String pgrHost;
+
+    @Value("${egov.pgr.search.path:pgr-services/v2/request/_search}")
+    private String pgrSearchPath;
+
+    @Value("${egov.pgr.create.path:pgr-services/v2/request/_create}")
+    private String pgrCreatePath;
+
     private String searchUrl;
 
-    @Value("${digit.create.url:https://urbanimcdev.eydemoapp.in/pgr-services/v2/request/_create}")
     private String createUrl;
+
+    private String tokenUrl;
+
+    @PostConstruct
+    public void init() {
+        searchUrl = pgrHost + pgrSearchPath;
+        createUrl = pgrHost + pgrCreatePath;
+        tokenUrl = userHost + tokenPath;
+    }
+
 
     public DigitGrievanceService(ChatFlowService chatFlowService,
                                  GrievanceService grievanceService,

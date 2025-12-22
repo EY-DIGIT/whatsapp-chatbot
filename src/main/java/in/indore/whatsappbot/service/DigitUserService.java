@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import in.indore.whatsappbot.model.UserRequests;
 import in.indore.whatsappbot.repository.UserRequestRepository;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,11 +26,15 @@ public class DigitUserService {
     private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Value("${digit.otp.url:http://localhost:3000/user-otp/v1/_send}")
-    private String otpUrl;
+    @Value("${egov.user.service.host:https://urbanimcdev.eydemoapp.in/}")
+    private String userHost;
 
-    @Value("${digit.token.url:http://localhost:3000/user/oauth/token}")
-    private String oauthUrl;
+    @Value("${egov.user.send-otp.path:user-otp/v1/_send}")
+    private String otpPath;
+
+    @Value("${egov.user.token.path:user/oauth/token}")
+    private String tokenPath;
+
 
     @Value("${digit.tenantId:mp}")
     private String tenantId;
@@ -39,6 +44,15 @@ public class DigitUserService {
 
     private final UserRequestRepository userRequestRepository;
     private final ChatFlowService chatFlowService;
+
+    private String otpUrl;
+    private String oauthUrl;
+
+    @PostConstruct
+    public void init() {
+        otpUrl = userHost + otpPath;
+        oauthUrl = userHost + tokenPath;
+    }
 
     public DigitUserService(UserRequestRepository userRequestRepository,
                             ChatFlowService chatFlowService) {
