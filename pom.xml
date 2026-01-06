@@ -1,84 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                      https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
+
+  <!-- Spring Boot Parent -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.1.4</version>
+    <relativePath/>
+  </parent>
+
   <groupId>in.indore</groupId>
-  <artifactId>whatsapp-bot-final</artifactId>
+  <artifactId>whatsapp-bot</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
+    <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.resources.encoding>UTF-8</maven.resources.encoding>
-    <java.version>17</java.version>
-    <spring.boot.version>3.1.4</spring.boot.version>
   </properties>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${spring.boot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
+
+    <!-- Web -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
+
+    <!-- JPA / Hibernate -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
+
+    <!-- PostgreSQL -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
     </dependency>
+
+    <!-- Redis -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.aventrix.jnanoid</groupId>
-      <artifactId>jnanoid</artifactId>
-      <version>2.0.0</version>
-    </dependency>
+
+    <!-- Flyway -->
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-core</artifactId>
     </dependency>
+
+    <!-- JSON -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
+
+    <!-- Hibernate JSON support -->
     <dependency>
       <groupId>com.vladmihalcea</groupId>
       <artifactId>hibernate-types-60</artifactId>
       <version>2.21.1</version>
     </dependency>
+
+    <!-- Nano ID -->
+    <dependency>
+      <groupId>com.aventrix.jnanoid</groupId>
+      <artifactId>jnanoid</artifactId>
+      <version>2.0.0</version>
+    </dependency>
+
+    <!-- Lombok -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
     </dependency>
+
+    <!-- Tests -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+
   </dependencies>
 
   <build>
 
-    <!-- FORCE resources to NOT be filtered (this fixes Hindi corruption) -->
+    <!-- Prevent resource filtering (Hindi text safe) -->
     <resources>
       <resource>
         <directory>src/main/resources</directory>
@@ -88,20 +107,17 @@
 
     <plugins>
 
-      <!-- Ensure UTF-8 is preserved for .properties files -->
+      <!-- UTF-8 Resource Handling -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.3.1</version>
         <configuration>
           <encoding>UTF-8</encoding>
-          <nonFilteredFileExtensions>
-            <nonFilteredFileExtension>properties</nonFilteredFileExtension>
-          </nonFilteredFileExtensions>
         </configuration>
       </plugin>
 
-      <!-- Ensure UTF-8 for Java source compilation -->
+      <!-- Java 17 Compiler -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -113,7 +129,7 @@
         </configuration>
       </plugin>
 
-      <!-- Spring Boot plugin -->
+      <!-- Spring Boot Repackage (EXECUTABLE JAR) -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
@@ -122,6 +138,5 @@
     </plugins>
 
   </build>
-
 
 </project>

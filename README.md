@@ -1,4 +1,4 @@
-# whatsapp-bot-final
+# whatsapp-bot
 
 A chat-first WhatsApp bot for Indore Nagar Nigam that demonstrates a complete conversation flow: language selection, OTP verification, grievance registration & tracking, and feedback collection. The service integrates with Digit (PGR) APIs to fetch real grievance data and exposes a small local proxy for Digit user endpoints (OTP / OAuth) used during development.
 
