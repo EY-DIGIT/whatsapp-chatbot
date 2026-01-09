@@ -12,6 +12,8 @@ import java.util.UUID;
 @Table(name = "audit_logs")
 public class AuditLog {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
     private String phone;
     private String direction;

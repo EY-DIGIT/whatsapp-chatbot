@@ -8,6 +8,8 @@ import java.util.UUID;
 @Table(name = "feedbacks")
 public class Feedback {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
     private String userRequestId;
     private Integer rating;
