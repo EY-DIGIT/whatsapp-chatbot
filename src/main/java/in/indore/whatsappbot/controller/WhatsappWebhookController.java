@@ -4,12 +4,14 @@ import in.indore.whatsappbot.config.WhatsappConfig;
 import in.indore.whatsappbot.service.ChatFlowService;
 import in.indore.whatsappbot.service.AuditService;
 import in.indore.whatsappbot.service.WhatsappMessageService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/whatsapp")
 public class WhatsappWebhookController {
@@ -50,6 +52,7 @@ public class WhatsappWebhookController {
                 chatFlow.handleIncoming(phone, text, serialize(payload));
             } catch (Exception e) {
                 // swallow - still return ok to WhatsApp, but could log to auditService if desired
+                log.error("Error:"+e.getMessage());
                 auditService.logError(phone, e.getMessage());
             }
         }
