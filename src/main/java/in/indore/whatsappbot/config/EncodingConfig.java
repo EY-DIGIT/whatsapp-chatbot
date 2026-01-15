@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 @Configuration
 public class EncodingConfig {
@@ -23,6 +24,15 @@ public class EncodingConfig {
             public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
                 converters.removeIf(c -> c instanceof StringHttpMessageConverter);
                 converters.add(0, customStringHttpMessageConverter());
+            }
+
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                // Allow CORS for all paths. Adjust origins if you want to restrict.
+                registry.addMapping("/**")
+                        .allowedOrigins("*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*");
             }
         };
     }
