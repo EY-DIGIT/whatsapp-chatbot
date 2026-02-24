@@ -12,10 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -261,6 +261,14 @@ public class ChatFlowService {
                     stateService.saveSession(phone, session);
                     return;
                 }
+                if (grievanceList.size()>10) {
+                    log.info("Grievance list for {} has {} items, showing first 10 with NEXT option", phone, grievanceList.size());
+                    List<String> remainingGrievanceList = new ArrayList<>(grievanceList.subList(9, grievanceList.size()));
+                    grievanceList = new ArrayList<>(grievanceList.subList(0, 9));
+                    grievanceList.add("NEXT");
+                    session.setGrievanceList(remainingGrievanceList);
+                    stateService.saveSession(phone, session);
+                }
                 OutgoingMessageDto listMsg = waService.buildListMessage(phone, lang, grievanceList);
                 auditService.logOut(phone, listMsg.text(), listMsg.rawJson());
                 waService.sendMessage(listMsg);
@@ -298,6 +306,28 @@ public class ChatFlowService {
         log.info("Handling track grievance selection for {}: {}", phone, text);
         String lang = stateService.getLanguage(phone);
         String serviceRequestId = text == null ? "" : text.trim();
+        if (serviceRequestId.equals("NEXT")) {
+            List<String> grievanceList = session.getGrievanceList();
+            if (grievanceList == null || grievanceList.isEmpty()) {
+                String noGrievanceMsg = templateService.t("grievances.not_found", lang, "");
+                send(phone, noGrievanceMsg);
+                session.setState(ChatState.NEW_STATE);
+                stateService.saveSession(phone, session);
+                return;
+            }
+            log.info("Handling NEXT for {}: {} grievances remaining", phone, grievanceList.size());
+            if (grievanceList.size()>10) {
+                List<String> remainingGrievanceList = new ArrayList<>(grievanceList.subList(9, grievanceList.size()));
+                grievanceList = new ArrayList<>(grievanceList.subList(0, 9));
+                grievanceList.add("NEXT");
+                session.setGrievanceList(remainingGrievanceList);
+                stateService.saveSession(phone, session);
+            }
+            OutgoingMessageDto listMsg = waService.buildListMessage(phone, lang, grievanceList);
+            auditService.logOut(phone, listMsg.text(), listMsg.rawJson());
+            waService.sendMessage(listMsg);
+            return;
+        }
         if (serviceRequestId.isEmpty()) {
             String notFoundMsg = templateService.t("track.not_found", lang, "");
             send(phone, notFoundMsg);

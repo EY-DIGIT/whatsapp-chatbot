@@ -2,6 +2,7 @@ package in.indore.whatsappbot.model;
 
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 
 public class ChatSession implements Serializable {
@@ -9,6 +10,7 @@ public class ChatSession implements Serializable {
     private UUID requestId;
     private in.indore.whatsappbot.enums.RequestFor requestFor;
     private boolean verified;
+    private List<String> grievanceList;
 
     public ChatSession() {}
 
@@ -25,4 +27,7 @@ public class ChatSession implements Serializable {
 
     public boolean isVerified() { return verified; }
     public void setVerified(boolean verified) { this.verified = verified; }
+
+    public List<String> getGrievanceList() { return grievanceList; }
+    public void setGrievanceList(List<String> grievanceList) { this.grievanceList = grievanceList; }
 }
