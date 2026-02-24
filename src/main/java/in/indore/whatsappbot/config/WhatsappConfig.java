@@ -8,6 +8,7 @@ public class WhatsappConfig {
     private String webhookVerifyToken;
     private String apiToken;
     private String apiBaseUrl;
+    private String metaAppSecret;
 
     public String getWebhookVerifyToken() {
         return webhookVerifyToken;
@@ -27,4 +28,7 @@ public class WhatsappConfig {
     public void setApiBaseUrl(String apiBaseUrl) {
         this.apiBaseUrl = apiBaseUrl;
     }
+    public void setMetaAppSecret(String metaAppSecret) {
+        this.metaAppSecret = metaAppSecret; }
+    public String getMetaAppSecret() {return this.metaAppSecret;}
 }

@@ -1,14 +1,21 @@
 package in.indore.whatsappbot.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import in.indore.whatsappbot.config.WhatsappConfig;
-import in.indore.whatsappbot.service.ChatFlowService;
 import in.indore.whatsappbot.service.AuditService;
+import in.indore.whatsappbot.service.ChatFlowService;
 import in.indore.whatsappbot.service.WhatsappMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.Map;
 
 @Slf4j
@@ -42,7 +49,13 @@ public class WhatsappWebhookController {
     }
 
     @PostMapping(value = "/webhook", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> webhook(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<String> webhook(
+            @RequestBody String rawBody,
+            @RequestHeader(value = "X-Hub-Signature-256", required = false) String signatureHeader) throws JsonProcessingException {
+        if (!isValidMetaSignature(rawBody, signatureHeader)) {
+            return ResponseEntity.status(401).body("invalid signature");
+        }
+        Map<String, Object> payload = new ObjectMapper().readValue(rawBody, Map.class);
         String phone = extractPhone(payload);
         String text = extractText(payload);
         if (phone != null) {
@@ -123,6 +136,31 @@ public class WhatsappWebhookController {
             return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(obj);
         } catch (Exception e) {
             return "{}";
+        }
+    }
+
+    private boolean isValidMetaSignature(String payload, String signatureHeader) {
+
+        if (signatureHeader == null || !signatureHeader.startsWith("sha256=")) {
+            return false;
+        }
+
+        String receivedHash = signatureHeader.substring(7);
+
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec key = new SecretKeySpec(config.getMetaAppSecret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(key);
+
+            byte[] computedHash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            String expectedHash = HexFormat.of().formatHex(computedHash);
+
+            return MessageDigest.isEqual(
+                    expectedHash.getBytes(StandardCharsets.UTF_8),
+                    receivedHash.getBytes(StandardCharsets.UTF_8)
+            );
+        } catch (Exception e) {
+            return false;
         }
     }
 }
