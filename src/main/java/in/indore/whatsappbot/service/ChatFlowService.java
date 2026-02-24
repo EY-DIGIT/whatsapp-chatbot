@@ -301,6 +301,9 @@ public class ChatFlowService {
         if (serviceRequestId.isEmpty()) {
             String notFoundMsg = templateService.t("track.not_found", lang, "");
             send(phone, notFoundMsg);
+            session.setState(ChatState.NEW_STATE);
+            stateService.saveSession(phone, session);
+            log.info("Session set to new state for {} unable to get grievance details due to empty service request id", phone);
             return;
         }
 
@@ -308,6 +311,9 @@ public class ChatFlowService {
         if (details == null) {
             String out = templateService.t("track.not_found", lang, serviceRequestId);
             send(phone, out);
+            session.setState(ChatState.NEW_STATE);
+            stateService.saveSession(phone, session);
+            log.info("Session set to new state for {} unable to get grievance details due to invalid service request id", phone);
             return;
         }
 
@@ -324,6 +330,8 @@ public class ChatFlowService {
                 modifiedStr = java.time.Instant.ofEpochMilli(details.lastModifiedTime()).atZone(zone).format(fmt);
             }
         } catch (Exception e) {
+            session.setState(ChatState.NEW_STATE);
+            stateService.saveSession(phone, session);
             log.warn("Failed to format date for grievance {}", serviceRequestId, e);
         }
 

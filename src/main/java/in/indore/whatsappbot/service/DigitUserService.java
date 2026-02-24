@@ -138,6 +138,9 @@ public class DigitUserService {
             throw new IllegalStateException("Invalid transactionId: " + transactionId);
         }
 
+        if (userRequests.isVerified())
+            throw new IllegalStateException("User already verified for transactionId: " + transactionId);
+
         if ((Duration.between(
                 userRequests.getVerificationRequestAt(),
                 Instant.now()).toMinutes() > 15)) {
