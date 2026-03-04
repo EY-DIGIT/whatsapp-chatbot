@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -352,7 +349,7 @@ public class ChatFlowService {
         String modifiedStr = "-";
         try {
             java.time.ZoneId zone = java.time.ZoneId.systemDefault();
-            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy, hh:mm a", Locale.ENGLISH);
             if (details.createdTime() != null) {
                 createdStr = java.time.Instant.ofEpochMilli(details.createdTime()).atZone(zone).format(fmt);
             }
@@ -431,12 +428,11 @@ public class ChatFlowService {
         stateService.saveSession(userRequests.getPhone(), session);
     }
 
-    public void handleGrievanceRegistered(String serviceRequestId, Grievance grievance) {
+    public void handleGrievanceRegistered(String serviceRequestId, Grievance grievance, String createdStr) {
         UserRequests userRequests = userRequestService.getById(UUID.fromString(grievance.getUserRequestId()));
         String phone = userRequests.getPhone();
         String lang = stateService.getLanguage(phone);
-        String out = templateService.t("acknowledgement", lang, serviceRequestId,
-                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+        String out = templateService.t("acknowledgement", lang, serviceRequestId, createdStr);
         send(userRequests.getPhone(), out);
         grievanceService.updateGrievance(serviceRequestId, "CREATED", String.valueOf(grievance.getId()));
         // return to main menu

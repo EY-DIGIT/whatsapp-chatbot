@@ -429,8 +429,12 @@ public class DigitGrievanceService {
             JsonNode serviceResp = first.path("service");
             String srId = serviceResp.path("serviceRequestId").asText(null);
             if (srId != null) {
+                long createdTime = serviceResp.path("auditDetails").path("createdTime").asLong(0L);
+                java.time.ZoneId zone = java.time.ZoneId.systemDefault();
+                java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy, hh:mm a", Locale.ENGLISH);
+                String createdStr = java.time.Instant.ofEpochMilli(createdTime).atZone(zone).format(fmt);
                 log.info("Created grievance with serviceRequestId={}", srId);
-                chatFlowService.handleGrievanceRegistered(srId, grievance);
+                chatFlowService.handleGrievanceRegistered(srId, grievance, createdStr);
                 return srId;
             }
             log.warn("PGR create response missing serviceRequestId: {}", body);
