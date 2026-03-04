@@ -1,6 +1,7 @@
 package in.indore.whatsappbot.controller;
 
 import in.indore.whatsappbot.dto.GrievanceRequest;
+import in.indore.whatsappbot.service.ChatFlowService;
 import in.indore.whatsappbot.service.DigitGrievanceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +15,12 @@ public class GrievanceController {
     private static final Logger log = LoggerFactory.getLogger(GrievanceController.class);
 
     private final DigitGrievanceService digitGrievanceService;
+    private final ChatFlowService chatFlowService;
 
-    public GrievanceController(DigitGrievanceService digitGrievanceService) {
+    public GrievanceController(DigitGrievanceService digitGrievanceService,
+                               ChatFlowService chatFlowService) {
         this.digitGrievanceService = digitGrievanceService;
+        this.chatFlowService = chatFlowService;
     }
 
     @PostMapping("/submit")
@@ -37,6 +41,19 @@ public class GrievanceController {
             return ResponseEntity.status(409).body(e.getMessage());
         } catch (Exception e) {
             log.error("Error while creating grievance", e);
+            return ResponseEntity.status(500).body("failure");
+        }
+    }
+
+    @PostMapping("resolved/message/send")
+    public ResponseEntity<String> sendResolvedMessage(@RequestParam(value = "serviceRequestId", required = true) String serviceRequestId,
+                                                      @RequestParam(value = "date", required = true) String date,
+                                                      @RequestParam(value = "comment", required = true) String comment) {
+        try {
+            chatFlowService.sendResolvedMessage(serviceRequestId, date, comment);
+            return ResponseEntity.ok("ok");
+        } catch (Exception e) {
+            log.error("Error while sending resolved message for serviceRequestId={}", serviceRequestId, e);
             return ResponseEntity.status(500).body("failure");
         }
     }

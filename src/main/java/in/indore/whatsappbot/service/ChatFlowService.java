@@ -7,6 +7,7 @@ import in.indore.whatsappbot.model.UserRequests;
 import in.indore.whatsappbot.model.ChatSession;
 import in.indore.whatsappbot.model.ChatState;
 import in.indore.whatsappbot.dto.OutgoingMessageDto;
+import in.indore.whatsappbot.repository.UserRequestRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,7 @@ public class ChatFlowService {
     private final DigitGrievanceService digitGrievanceService;
     private final GrievanceService grievanceService;
     private final FormDataService formDataService;
+    private final UserRequestRepository userRequestRepository;
 
     public ChatFlowService(ConversationStateService stateService,
                            TemplateService templateService,
@@ -41,7 +43,8 @@ public class ChatFlowService {
                            FeedbackService feedbackService,
                            @Lazy DigitGrievanceService digitGrievanceService,
                            GrievanceService grievanceService,
-                           FormDataService formDataService) {
+                           FormDataService formDataService,
+                           UserRequestRepository userRequestRepository) {
         this.stateService = stateService;
         this.templateService = templateService;
         this.waService = waService;
@@ -52,6 +55,7 @@ public class ChatFlowService {
         this.digitGrievanceService = digitGrievanceService;
         this.grievanceService = grievanceService;
         this.formDataService = formDataService;
+        this.userRequestRepository = userRequestRepository;
     }
 
     @Value("${egov.form.host:https://urbanimcdev.eydemoapp.in/}")
@@ -440,5 +444,51 @@ public class ChatFlowService {
         session.setState(ChatState.NEW_STATE);
         stateService.saveSession(phone, session);
         log.info("Session set to new state for {} after grievance registration", phone);
+    }
+
+    public void sendResolvedMessage(String serviceRequestId, String date, String comment) {
+        Optional<String> phoneOptional = userRequestRepository.findPhoneByGrievanceId(serviceRequestId);
+        if (phoneOptional.isEmpty()) {
+            log.warn("No phone number found for serviceRequestId {}, cannot send resolved message", serviceRequestId);
+            return;
+        }
+        String phone = phoneOptional.get();
+        String lang = stateService.getLanguage(phone);
+
+        try {
+            String langCode = (lang == null || lang.isBlank()) ? "hi" : lang;
+            java.time.ZoneId zone = java.time.ZoneId.systemDefault();
+            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy, hh:mm a", Locale.ENGLISH);
+            if (date != null) {
+                date = java.time.Instant.ofEpochMilli(Long.parseLong(date)).atZone(zone).format(fmt);
+            }
+            Map<String, Object> bodyParam1 = Map.of("type", "text", "text", serviceRequestId);
+            Map<String, Object> bodyParam2 = Map.of("type", "text", "text", date);
+            Map<String, Object> bodyParam3 = Map.of("type", "text", "text", comment == null ? "" : comment);
+
+            Map<String, Object> bodyComponent = Map.of(
+                    "type", "body",
+                    "parameters", List.of(bodyParam1, bodyParam2, bodyParam3)
+            );
+
+            Map<String, Object> template = Map.of(
+                    "name", "grievance_resolved",
+                    "language", Map.of("code", langCode),
+                    "components", List.of(bodyComponent)
+            );
+
+            Map<String, Object> payload = Map.of(
+                    "messaging_product", "whatsapp",
+                    "to", phone,
+                    "type", "template",
+                    "template", template
+            );
+            String raw = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(payload);
+            OutgoingMessageDto msg = new OutgoingMessageDto(phone, null, raw);
+            auditService.logOut(phone, null, raw);
+            waService.sendMessage(msg);
+        } catch (Exception e) {
+            log.warn("Failed to build/send template message for {}", phone, e);
+        }
     }
 }
