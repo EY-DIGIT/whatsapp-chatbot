@@ -464,7 +464,7 @@ public class ChatFlowService {
             }
             Map<String, Object> bodyParam1 = Map.of("type", "text", "text", serviceRequestId);
             Map<String, Object> bodyParam2 = Map.of("type", "text", "text", date);
-            Map<String, Object> bodyParam3 = Map.of("type", "text", "text", comment == null ? "" : comment);
+            Map<String, Object> bodyParam3 = Map.of("type", "text", "text", comment == null || comment.isEmpty() ? "NA" : comment);
 
             Map<String, Object> bodyComponent = Map.of(
                     "type", "body",

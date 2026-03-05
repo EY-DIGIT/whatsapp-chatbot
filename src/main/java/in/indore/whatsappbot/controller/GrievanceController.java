@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/grievance")
 public class GrievanceController {
@@ -46,15 +48,15 @@ public class GrievanceController {
     }
 
     @PostMapping("resolved/message/send")
-    public ResponseEntity<String> sendResolvedMessage(@RequestParam(value = "serviceRequestId", required = true) String serviceRequestId,
+    public ResponseEntity<Map<String, String>> sendResolvedMessage(@RequestParam(value = "serviceRequestId", required = true) String serviceRequestId,
                                                       @RequestParam(value = "date", required = true) String date,
                                                       @RequestParam(value = "comment", required = true) String comment) {
         try {
             chatFlowService.sendResolvedMessage(serviceRequestId, date, comment);
-            return ResponseEntity.ok("ok");
+            return ResponseEntity.ok(Map.of("message", "OK"));
         } catch (Exception e) {
             log.error("Error while sending resolved message for serviceRequestId={}", serviceRequestId, e);
-            return ResponseEntity.status(500).body("failure");
+            return ResponseEntity.status(500).body(Map.of("message", "failure"));
         }
     }
 }

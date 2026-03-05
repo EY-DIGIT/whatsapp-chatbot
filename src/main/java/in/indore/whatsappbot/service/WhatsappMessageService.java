@@ -136,10 +136,15 @@ public class WhatsappMessageService {
              HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
              int sc = response.statusCode();
              log.info("WhatsApp API responded status={} for to={}", sc, msg.to());
+             if (sc < 200 || sc >= 300) {
+                 log.warn("Non-success response from WhatsApp API: status={}, body={}", sc, response.body());
+                 throw new RuntimeException("Non-success response from WhatsApp API: Status " + sc);
+             }
              log.trace("WhatsApp response body={}", response.body());
          } catch (Exception e) {
              // best-effort: swallow and return false so caller can continue flow
              log.warn("Failed to send WhatsApp message, returning false", e);
+             throw new RuntimeException("Failed to send WhatsApp message: " + e.getMessage(), e);
          }
      }
  }
