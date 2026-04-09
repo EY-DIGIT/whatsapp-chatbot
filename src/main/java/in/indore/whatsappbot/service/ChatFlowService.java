@@ -462,9 +462,12 @@ public class ChatFlowService {
             if (date != null) {
                 date = java.time.Instant.ofEpochMilli(Long.parseLong(date)).atZone(zone).format(fmt);
             }
-            Map<String, Object> bodyParam1 = Map.of("type", "text", "text", serviceRequestId);
-            Map<String, Object> bodyParam2 = Map.of("type", "text", "text", date);
-            Map<String, Object> bodyParam3 = Map.of("type", "text", "text", comment == null || comment.isEmpty() ? "NA" : comment);
+//            Map<String, Object> bodyParam1 = Map.of("type", "text", "text", serviceRequestId);
+//            Map<String, Object> bodyParam2 = Map.of("type", "text", "text", date);
+//            Map<String, Object> bodyParam3 = Map.of("type", "text", "text", comment == null || comment.isEmpty() ? "NA" : comment);
+			Map<String, Object> bodyParam1 = Map.of("type", "text", "parameter_name", "grievance_id", "text", serviceRequestId);
+			Map<String, Object> bodyParam2 = Map.of("type", "text", "parameter_name", "resolved_date", "text", date);
+			Map<String, Object> bodyParam3 = Map.of("type", "text", "parameter_name", "remarks", "text", comment == null || comment.isEmpty() ? "NA" : comment);
 
             Map<String, Object> bodyComponent = Map.of(
                     "type", "body",
