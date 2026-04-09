@@ -58,11 +58,6 @@ public class WhatsappWebhookController {
         Map<String, Object> payload = new ObjectMapper().readValue(rawBody, Map.class);
         String phone = extractPhone(payload);
         String text = extractText(payload);
-        
-        log.info("RAW PAYLOAD: {}", rawBody);
-        log.info("Extracted phone: {}", phone);
-        log.info("Extracted text: {}", text);
-        
         if (phone != null) {
             if (text == null) text = "";
             // call the chat flow which will send messages; controller returns just plain ok
