@@ -472,8 +472,7 @@ public class ChatFlowService {
             );
 
             Map<String, Object> template = Map.of(
-                   // "name", "grievance_resolved",
-                    "name", "resolution",
+                    "name", "grievance_resolved",
                     "language", Map.of("code", langCode),
                     "components", List.of(bodyComponent)
             );
