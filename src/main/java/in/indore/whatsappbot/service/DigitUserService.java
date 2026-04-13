@@ -27,8 +27,7 @@ public class DigitUserService {
     private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
 
-//    @Value("${egov.user.service.host:https://urbanimcdev.eydemoapp.in/}")
-    @Value("${egov.user.service.host:http://localhost:9184/}")
+    @Value("${egov.user.service.host:https://urbanimcdev.eydemoapp.in/}")
     private String userHost;
 
     @Value("${egov.user.send-otp.path:user-otp/v1/_send}")
@@ -36,6 +35,9 @@ public class DigitUserService {
 
     @Value("${egov.user.token.path:user/oauth/token}")
     private String tokenPath;
+    
+    @Value("${egov.otp.validate-otp.path:otp/v1/_validate}")
+    private String otpValidatePath;
 
 
     @Value("${digit.tenantId:mp}")
@@ -49,11 +51,13 @@ public class DigitUserService {
 
     private String otpUrl;
     private String oauthUrl;
+    private String validateOtpUrl;
 
     @PostConstruct
     public void init() {
         otpUrl = userHost + otpPath;
         oauthUrl = userHost + tokenPath;
+        validateOtpUrl = userHost + otpValidatePath;
     }
 
     public DigitUserService(UserRequestRepository userRequestRepository,
@@ -69,15 +73,15 @@ public class DigitUserService {
     public ResponseEntity<String> sendOtp(ObjectNode requestJson, String transactionId) throws IllegalAccessException {
 
         UserRequests userRequests = userRequestRepository.findById(UUID.fromString(transactionId)).orElse(null);
-//        if (userRequests == null) {
-//            throw new IllegalStateException("Invalid transactionId: " + transactionId);
-//        }
-//
-//        if ((Duration.between(
-//                userRequests.getVerificationRequestAt(),
-//                Instant.now()).toMinutes() > 15)) {
-//            throw new IllegalStateException("Verification request expired for transactionId: " + transactionId);
-//        }
+        if (userRequests == null) {
+            throw new IllegalStateException("Invalid transactionId: " + transactionId);
+        }
+
+        if ((Duration.between(
+                userRequests.getVerificationRequestAt(),
+                Instant.now()).toMinutes() > 15)) {
+            throw new IllegalStateException("Verification request expired for transactionId: " + transactionId);
+        }
 
         try {
             String url = otpUrl;
@@ -209,20 +213,20 @@ public class DigitUserService {
     public ResponseEntity<String> validateOtp(String identity, String otp, String userType,String tenant, String transactionId) {
 
         UserRequests userRequests = userRequestRepository.findById(UUID.fromString(transactionId)).orElse(null);
-//        if (userRequests == null) {
-//            throw new IllegalStateException("Invalid transactionId: " + transactionId);
-//        }
-//
-//        if (userRequests.isVerified()) {
-//            throw new IllegalStateException("User already verified for transactionId: " + transactionId);
-//        }
-//
-//        if ((Duration.between(userRequests.getVerificationRequestAt(), Instant.now()).toMinutes() > 15)) {
-//            throw new IllegalStateException("Verification request expired for transactionId: " + transactionId);
-//        }
+        if (userRequests == null) {
+            throw new IllegalStateException("Invalid transactionId: " + transactionId);
+        }
+
+        if (userRequests.isVerified()) {
+            throw new IllegalStateException("User already verified for transactionId: " + transactionId);
+        }
+
+        if ((Duration.between(userRequests.getVerificationRequestAt(), Instant.now()).toMinutes() > 15)) {
+            throw new IllegalStateException("Verification request expired for transactionId: " + transactionId);
+        }
 
         try {
-            String url = "http://localhost:9185/otp/v1/_validate";
+            String url = validateOtpUrl;
 
             // Headers
             HttpHeaders headers = new HttpHeaders();
