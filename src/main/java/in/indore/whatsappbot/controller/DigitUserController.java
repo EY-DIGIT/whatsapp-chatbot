@@ -71,7 +71,8 @@ public class DigitUserController {
             String password = form.getOrDefault("password", "");
             String userType = form.getOrDefault("userType", null);
             String tenant = form.getOrDefault("tenantId", null);
-            return digitUserService.token(username, password, userType, tenant, transactionId);
+           // return digitUserService.token(username, password, userType, tenant, transactionId);
+            return digitUserService.validateOtp(username, password, userType, tenant, transactionId);
         } catch (IllegalStateException e){
             log.warn(e.getMessage());
             return ResponseEntity

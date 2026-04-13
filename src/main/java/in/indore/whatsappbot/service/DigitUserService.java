@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,7 +27,8 @@ public class DigitUserService {
     private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Value("${egov.user.service.host:https://urbanimcdev.eydemoapp.in/}")
+//    @Value("${egov.user.service.host:https://urbanimcdev.eydemoapp.in/}")
+    @Value("${egov.user.service.host:http://localhost:9184/}")
     private String userHost;
 
     @Value("${egov.user.send-otp.path:user-otp/v1/_send}")
@@ -67,15 +69,15 @@ public class DigitUserService {
     public ResponseEntity<String> sendOtp(ObjectNode requestJson, String transactionId) throws IllegalAccessException {
 
         UserRequests userRequests = userRequestRepository.findById(UUID.fromString(transactionId)).orElse(null);
-        if (userRequests == null) {
-            throw new IllegalStateException("Invalid transactionId: " + transactionId);
-        }
-
-        if ((Duration.between(
-                userRequests.getVerificationRequestAt(),
-                Instant.now()).toMinutes() > 15)) {
-            throw new IllegalStateException("Verification request expired for transactionId: " + transactionId);
-        }
+//        if (userRequests == null) {
+//            throw new IllegalStateException("Invalid transactionId: " + transactionId);
+//        }
+//
+//        if ((Duration.between(
+//                userRequests.getVerificationRequestAt(),
+//                Instant.now()).toMinutes() > 15)) {
+//            throw new IllegalStateException("Verification request expired for transactionId: " + transactionId);
+//        }
 
         try {
             String url = otpUrl;
@@ -201,6 +203,79 @@ public class DigitUserService {
             } catch (Exception ex) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{}");
             }
+        }
+    }
+    
+    public ResponseEntity<String> validateOtp(String identity, String otp, String userType,String tenant, String transactionId) {
+
+        UserRequests userRequests = userRequestRepository.findById(UUID.fromString(transactionId)).orElse(null);
+//        if (userRequests == null) {
+//            throw new IllegalStateException("Invalid transactionId: " + transactionId);
+//        }
+//
+//        if (userRequests.isVerified()) {
+//            throw new IllegalStateException("User already verified for transactionId: " + transactionId);
+//        }
+//
+//        if ((Duration.between(userRequests.getVerificationRequestAt(), Instant.now()).toMinutes() > 15)) {
+//            throw new IllegalStateException("Verification request expired for transactionId: " + transactionId);
+//        }
+
+        try {
+            String url = "http://localhost:9185/otp/v1/_validate";
+
+            // Headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+            // Body
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode request = mapper.createObjectNode();
+
+            ObjectNode requestInfo = mapper.createObjectNode();
+            requestInfo.put("api_id", "1");
+            requestInfo.put("ver", "1");
+            requestInfo.putNull("ts");
+            requestInfo.put("action", "create");
+            requestInfo.put("did", "");
+            requestInfo.put("key", "");
+            requestInfo.put("msg_id", "");
+            requestInfo.put("requester_id", "");
+            requestInfo.putNull("auth_token");
+
+            ObjectNode otpNode = mapper.createObjectNode();
+            otpNode.put("tenantId", tenant);
+            otpNode.put("identity", identity);
+            otpNode.put("otp", otp);
+
+            request.set("RequestInfo", requestInfo);
+            request.set("otp", otpNode);
+
+            HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(request), headers);
+
+            ResponseEntity<String> response = rest.postForEntity(url, entity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                ObjectNode out = mapper.createObjectNode();
+                out.put("message", "User Verified");
+
+                chatFlowService.handleValidatedUser(transactionId, identity);
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(mapper.writeValueAsString(out));
+            }
+
+            return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+
+        } catch (HttpClientErrorException ex) {
+            log.warn("OTP Validation failed: {}", ex.getResponseBodyAsString());
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("Error calling OTP API", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\":\"internal_error\"}");
         }
     }
 }
